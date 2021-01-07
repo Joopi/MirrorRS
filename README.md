@@ -1,9 +1,9 @@
-# MirroredRS
+# MirrorRS
 A reflection client for OSRS.
 
-## What is MirroredRS? ##
+## What is MirrorRS? ##
 A fairly simple client that loads the jagexappletviewer and reads fields from the client using Java Reflection.
-MirroredRS exposes an easy-to-use API for interacting with game entities, while also providing access to raw fields in the game.
+MirrorRS exposes an easy-to-use API for interacting with game entities, while also providing access to raw fields in the game.
 
 ## Features ##
 * Model rendering
