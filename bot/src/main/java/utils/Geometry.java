@@ -39,4 +39,17 @@ public class Geometry {
         }
         return null;
     }
+
+    public static Point intersection(Rectangle bounds, Point from, Point midPoint) {
+        Point intersect;
+        int[][] corners = {{bounds.x + bounds.width, bounds.y}, {bounds.x, bounds.y}, {bounds.x, bounds.y + bounds.height}, {bounds.x + bounds.width, bounds.y + bounds.height}, {bounds.x + bounds.width, bounds.y}};
+        for (int i = 1; i < corners.length; i++) {
+            intersect = Geometry.linesIntersect(corners[i - 1][0], corners[i - 1][1], corners[i][0], corners[i][1], from.x, from.y, midPoint.x, midPoint.y);
+            if (intersect != null)
+                return intersect;
+        }
+
+        System.out.println("WARNING: found no intersection, resorting to mid point");
+        return midPoint;
+    }
 }

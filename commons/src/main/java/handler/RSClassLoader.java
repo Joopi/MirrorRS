@@ -16,10 +16,15 @@ public class RSClassLoader {
         return instance;
     }
 
-    public static Class loadClass(String className) throws ClassNotFoundException {
+    public static Class loadClass(String className) {
         Class res = map.get(className);
         if (res == null) {
-            res = get().loadClass(className);
+            try {
+                res = get().loadClass(className);
+            } catch (ClassNotFoundException e) {
+                e.printStackTrace();
+                System.exit(1);
+            }
             map.put(className, res);
         }
         return res;

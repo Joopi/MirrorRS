@@ -10,7 +10,6 @@ import java.util.LinkedHashSet;
 
 public class DrawImage extends ValidatePipe {
 
-    //insertion order matters
     private static LinkedHashSet<OnDraw> callbacks = new LinkedHashSet<>();
     private ValidatePipe original;
 
@@ -32,7 +31,9 @@ public class DrawImage extends ValidatePipe {
         try {
             if (img != null && img.getGraphics() != null && img.getGraphics() instanceof SunGraphics2D) {
                 SunGraphics2D g2d = (SunGraphics2D) img.getGraphics();
-                for (OnDraw callback : callbacks) {
+
+                LinkedHashSet<OnDraw> threadSafeCallbacks = new LinkedHashSet<>(callbacks);
+                for (OnDraw callback : threadSafeCallbacks) {
                     callback.draw(g2d);
                 }
             }

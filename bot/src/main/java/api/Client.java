@@ -2,6 +2,7 @@ package api;
 
 import handler.RSHandler;
 import internals.RSClient;
+import sun.awt.CausedFocusEvent;
 import types.shapes.ExtRectangle;
 
 import java.awt.*;
@@ -16,7 +17,7 @@ public class Client extends RSClient {
 
     public static ExtRectangle mainscreen() {
         if (mainscreen == null) {
-            mainscreen = new ExtRectangle(RSClient.viewportX(), RSClient.viewportY(), RSClient.viewportWidth(), RSClient.viewportHeight());
+            mainscreen = new ExtRectangle(viewportX(), viewportY(), viewportWidth(), viewportHeight());
         }
 
         return mainscreen;
@@ -27,16 +28,15 @@ public class Client extends RSClient {
     }
 
     public static void setFocus(boolean focus) {
-        System.out.println("Setting focus: " + focus);
-        if (focus && !hasFocus()) {
-            Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(new FocusEvent(getCanvas(), FocusEvent.FOCUS_GAINED));
-        } else if (hasFocus()) {
-            Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(new FocusEvent(getCanvas(), FocusEvent.FOCUS_LOST));
+        if (focus != hasFocus()) {
+            System.out.println("Setting focus: " + focus);
+            CausedFocusEvent e = new CausedFocusEvent(getCanvas(), focus ? FocusEvent.FOCUS_GAINED : FocusEvent.FOCUS_LOST, focus, null, CausedFocusEvent.Cause.ACTIVATION);
+            Toolkit.getDefaultToolkit().getSystemEventQueue().postEvent(e);
         }
     }
 
     public static boolean isLoggedIn() {
-        return RSClient.gameState() == 30;
+        return gameState() == 30;
     }
 
 }

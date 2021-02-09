@@ -47,7 +47,7 @@ public class RSObjectInfo extends RSInternal {
         if (transformations.length > 0) {
             int transformVarbit = transformVarbit();
 
-            int idx = (transformVarbit != -1) ? Varbit.getVarbit(transformVarbit) : RSVarps.varpsMain()[transformVar()];
+            int idx = (transformVarbit != -1) ? Varbit.get(transformVarbit) : RSVarps.varpsMain()[transformVar()];
             int ID = (idx >= 0 && idx < transformations.length) ? transformations[idx] : transformations[transformations.length - 1];
             return info(ID);
         }

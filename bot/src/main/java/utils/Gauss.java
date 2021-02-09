@@ -25,4 +25,5 @@ public class Gauss {
     public static double constrain(double low, double high, double mean, double dev) {
         return constrain(low, high, mean, dev, MAX_TRIES);
     }
+
 }

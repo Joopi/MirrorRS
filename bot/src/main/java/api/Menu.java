@@ -10,7 +10,6 @@ import java.awt.*;
 import java.awt.event.MouseEvent;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static utils.Reflection.*;
@@ -24,14 +23,33 @@ public class Menu {
         Object[] actions = getRefArray(RSClient.CLASS_NAME, "menuActions", null);
         Object[] targets = getRefArray(RSClient.CLASS_NAME, "menuTargetNames", null);
 
-        return IntStream.range(0, optionsCount())
-                .mapToObj(i -> (actions[i] != null ? Text.stripHTML((String) actions[i]) : "") + " " + (targets[i] != null ? Text.stripHTML((String) targets[i]) : ""));
+        Stream.Builder<String> builder = Stream.builder();
+        int optionsCount = optionsCount();
+
+        for (int i = 0; i < optionsCount; i++) {
+            int idx = optionsCount-i-1; //flip order of Menu entries.
+            builder.accept((actions[idx] != null ? Text.stripHTML((String) actions[idx]) : "") + " " + (targets[idx] != null ? Text.stripHTML((String) targets[idx]) : ""));
+        }
+
+        return builder.build();
     }
 
     public static String getUptext() {
         return getOptions()
                 .findFirst()
                 .orElse("");
+    }
+
+    public static boolean isUptext(String substring) {
+        return getUptext().contains(substring);
+    }
+
+    public static boolean waitUptext(String substring, int interval, long max) {
+        return Sleep.until(() -> isUptext(substring), interval, max);
+    }
+
+    public static boolean waitUptext(String substring) {
+        return waitUptext(substring, 20, 250);
     }
 
     public static boolean chooseOption(String option) {
@@ -43,7 +61,7 @@ public class Menu {
                     ExtRectangle clickBox = getClickBox(i);
                     Point offset = clickBox.middle();
                     offset.translate(80, 12);
-                    Mouse.move(clickBox.gaussianMagnet(offset, 0.4));
+                    Mouse.move(clickBox.gravityMagnet(offset, 0.4));
                     if (!isOpen())
                         return false;
 

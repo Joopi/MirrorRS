@@ -18,7 +18,11 @@ public class RSVarbitInfo extends RSDualNode {
 
     public static RSVarbitInfo info(long ID) {
         RSCache cache = varbitInfoCache();
-        return cache != null ? new RSVarbitInfo(cache.get(ID).ref) : null;
+        RSNode node = null;
+        if (cache != null)
+            node = cache.get(ID);
+
+        return node != null ? new RSVarbitInfo(node.ref) : null;
     }
 
     public int baseVar() {

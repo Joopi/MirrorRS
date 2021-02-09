@@ -16,7 +16,8 @@ public class RSNPCInfo extends RSInternal {
     }
 
     public static RSNPCInfo cachedInfo(long ID) {
-        return new RSNPCInfo(RSClient.NPCInfoCache().get(ID).ref);
+        RSNode node = RSClient.NPCInfoCache().get(ID);
+        return node != null ? new RSNPCInfo(node.ref) : null;
     }
 
     public RSNPCInfo transform() {
@@ -25,7 +26,7 @@ public class RSNPCInfo extends RSInternal {
         if (transforms.length > 0) {
             int transformVarbit = transformVarbit();
 
-            int idx = (transformVarbit != -1) ? Varbit.getVarbit(transformVarbit) : RSVarps.varpsMain()[transformVar()];
+            int idx = (transformVarbit != -1) ? Varbit.get(transformVarbit) : RSVarps.varpsMain()[transformVar()];
             int ID = (idx >= 0 && idx < transforms.length) ? transforms[idx] : transforms[transforms.length - 1];
             return cachedInfo(ID);
         }

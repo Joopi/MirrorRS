@@ -1,16 +1,18 @@
 package api.input;
 
 import api.Client;
+import api.draw.MouseDraw;
 import api.events.OnBeforeClick;
 import api.events.OnMove;
-import api.draw.MouseDraw;
 import api.util.Sleep;
 import internals.RSClient;
 import utils.Gauss;
 import utils.Geometry;
 
 import java.awt.*;
+import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
+import java.awt.event.MouseWheelEvent;
 
 import static utils.Reflection.getInt;
 
@@ -151,8 +153,7 @@ public class Mouse {
         updateButtons(clickType, true);
         int btnMask = (leftDown ? MouseEvent.BUTTON1_DOWN_MASK : 0) | (rightDown ? (MouseEvent.BUTTON3_DOWN_MASK | MouseEvent.META_DOWN_MASK) : 0);
         Canvas canvas = Client.getCanvas();
-        if (!canvas.isFocusOwner())
-            Client.setFocus(true);
+        Client.setFocus(true);
 
         eventQueue.postEvent(new MouseEvent(canvas, MouseEvent.MOUSE_PRESSED, System.currentTimeMillis(), btnMask, cachedX, cachedY, 1, false, clickType));
 
@@ -198,5 +199,22 @@ public class Mouse {
 
     public static boolean clicked(Point point, boolean red) {
         return clicked(point.x, point.y, red);
+    }
+
+    public static void scroll(Point location, int steps, boolean down) {
+        Point scrollLoc = getPosition();
+
+        if (scrollLoc.distance(location) > 0) {
+            move(location);
+            Sleep.range(20, 90, 40, 7);
+            scrollLoc = getPosition();
+        }
+
+        Canvas canvas = Client.getCanvas();
+        int btnMask = (Keyboard.isKeyHeld(KeyEvent.VK_SHIFT) ? KeyEvent.SHIFT_MASK : 0) | (Keyboard.isKeyHeld(KeyEvent.VK_ALT) ? KeyEvent.ALT_MASK : 0) | (Keyboard.isKeyHeld(KeyEvent.VK_CONTROL) ? KeyEvent.CTRL_MASK : 0);
+        for (int i = 0; i < steps; i++) {
+            eventQueue.postEvent(new MouseWheelEvent(canvas, MouseWheelEvent.MOUSE_WHEEL, System.currentTimeMillis(), btnMask, scrollLoc.x, scrollLoc.y, 0, false, MouseWheelEvent.WHEEL_UNIT_SCROLL, 3, down ? 1 : -1));
+            Sleep.range(70, 180, 110, 21);
+        }
     }
 }

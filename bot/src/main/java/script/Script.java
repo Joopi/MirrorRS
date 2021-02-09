@@ -6,6 +6,7 @@ public abstract class Script implements Runnable {
     private boolean doStop = false;
 
     public Script() {
+        System.out.println("Starting script");
         thread = new Thread(this);
         thread.start();
     }
@@ -18,6 +19,7 @@ public abstract class Script implements Runnable {
         return (!doStop);
     }
 
+    @Override
     public void run() {
         if (onStart())
             while (isRunning())

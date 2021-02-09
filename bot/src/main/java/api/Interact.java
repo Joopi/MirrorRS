@@ -2,7 +2,8 @@ package api;
 
 import api.input.Mouse;
 import api.util.Sleep;
-import types.shapes.ConvexHull;
+import internals.RSComponent;
+import types.shapes.ShapeRandom;
 
 import java.awt.*;
 import java.awt.event.MouseEvent;
@@ -10,24 +11,34 @@ import java.util.function.BooleanSupplier;
 
 public class Interact {
 
-    public static boolean with(ConvexHull hull, Rectangle boundaries, BooleanSupplier uptextMatches, boolean leftClick) {
-        if (!hull.valid())
+    public static boolean point(Point clickPoint, BooleanSupplier clickCondition, boolean leftClick) {
+        Mouse.move(clickPoint);
+        if (!Sleep.until(clickCondition, 20, 140))
             return false;
-
-        Point clickPoint = hull.gaussianMagnet(Mouse.getPosition(), 0.3);
-
-        if (!boundaries.contains(clickPoint) || !Sleep.until(uptextMatches, 20, 140))
-            return false;
-
-        if (leftClick) {
-            return Mouse.clicked(clickPoint, true);
-        } else {
-            return Mouse.click(clickPoint, MouseEvent.BUTTON3) && Sleep.until(Menu::isOpen, 20, 250);
-        }
+            
+        return leftClick ? Mouse.click(clickPoint, MouseEvent.BUTTON1) : Mouse.click(clickPoint, MouseEvent.BUTTON3) && Sleep.until(Menu::isOpen, 20, 250);
     }
 
-    public static boolean with(ConvexHull hull, BooleanSupplier uptextMatches, boolean leftClick) {
-        return with(hull, hull.getBounds(), uptextMatches, leftClick);
+    public static boolean shape(ShapeRandom shape, Rectangle boundaries, BooleanSupplier clickCondition, boolean leftClick) {
+        Point clickPoint = shape.gravityMouse();
+        if (!boundaries.contains(clickPoint))
+            return false;
+
+        return point(clickPoint, clickCondition, leftClick);
     }
 
+    public static boolean shape(ShapeRandom shape, BooleanSupplier clickCondition, boolean leftClick) {
+        return shape(shape, shape.getBounds(), clickCondition, leftClick);
+    }
+
+    public static boolean component(RSComponent component, boolean leftClick) {
+        BooleanSupplier uptextMatches = () -> Menu.isUptext(component.name());
+        return shape(component.bounds(), uptextMatches, leftClick);
+
+    }
+
+    public static boolean componentItem(RSComponent componentItem, boolean leftClick) {
+        BooleanSupplier uptextMatches = () ->  Menu.isUptext(componentItem.itemName());
+        return shape(componentItem.bounds(), uptextMatches, leftClick);
+    }
 }

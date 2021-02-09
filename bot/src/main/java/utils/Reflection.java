@@ -1,11 +1,12 @@
 package utils;
 
 import handler.RSClassLoader;
-import hooks.GameClass;
+import hooks.FieldMultiplier;
 import hooks.Hook;
 import hooks.Hooks;
 
 import java.lang.reflect.Field;
+import java.util.HashMap;
 
 /**
  * Wrapper class for reflection
@@ -14,133 +15,153 @@ import java.lang.reflect.Field;
 
 public class Reflection {
 
-    private static Hook getHook(String className, String fieldName) {
-        GameClass gameClass = Hooks.get(className);
-        return (gameClass != null) ? gameClass.getHook(fieldName) : null;
+    private static HashMap<String, FieldMultiplier> cachedFieldMultipliers = new HashMap<String, FieldMultiplier>();
+    private static HashMap<String, Field> cachedFields = new HashMap<String, Field>();
+
+
+    private static Class loadClass(String obfuscatedName) {
+        return RSClassLoader.loadClass(obfuscatedName);
     }
 
-    private static Class loadClass(String className) throws ClassNotFoundException {
-        return RSClassLoader.loadClass(className);
-    }
-
-    private static Class loadClass(Hook hook) throws ClassNotFoundException {
-        return (hook != null) ? RSClassLoader.loadClass(hook.getOwner()) : null;
-    }
-
-    private static Field getField(Hook hook) {
+    private static Field getField(String obfuscatedClassName, String obfuscatedFieldName) {
         try {
-            if (hook != null) {
-                Class clazz = loadClass(hook);
-                if (clazz != null) {
-                    Field field = clazz.getDeclaredField(hook.getName());
-                    return field;
-                }
+            Class clazz = loadClass(obfuscatedClassName);
+            if (clazz != null) {
+                Field result = clazz.getDeclaredField(obfuscatedFieldName);
+                result.setAccessible(true);
+                return result;
             }
-        } catch (ClassNotFoundException | NoSuchFieldException e) {
+        } catch (NoSuchFieldException e) {
             e.printStackTrace();
         }
-        return null;
+
+        throw new RuntimeException("Field not found");
     }
 
     //checks if object "ref" refers to the ingame class.
     //className is not obfuscated.
     public static boolean instanceOf(Object ref, String className) {
-        try {
-            GameClass gameClass = Hooks.get(className);
-            if (gameClass != null) {
-                Class clazz = loadClass(gameClass.getObfuscatedName());
-                if (clazz != null) {
-                    return clazz.isInstance(ref);
-                }
-            }
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
-        return false;
-    }
-
-    public static Object getValue(Hook hook, Object ref) {
-        Field field = getField(hook);
-        if (field != null) {
-            boolean accessible = field.isAccessible();
-
-            if (!accessible)
-                field.setAccessible(true);
-
-            try {
-                Object returnValue = field.get(ref);
-                if (!accessible)
-                    field.setAccessible(false);
-
-                return returnValue;
-
-            } catch (IllegalAccessException e) {
-                if (!accessible) field.setAccessible(false);
-                e.printStackTrace();
+        String obfuscatedName = Hooks.getObfuscatedClassName(className);
+        if (obfuscatedName != null) {
+            Class clazz = loadClass(obfuscatedName);
+            if (clazz != null) {
+                return clazz.isInstance(ref);
             }
         }
-        return null;
+
+        throw new ClassCastException("instaceOf failed");
     }
+
+    public static FieldMultiplier getFieldMultiplier(String className, String fieldName) {
+        String keyName = Hooks.toClassFieldKey(className, fieldName);
+        FieldMultiplier result = cachedFieldMultipliers.get(keyName);
+        if (result == null) {
+            Hook hook = Hooks.getHook(keyName);
+            result = new FieldMultiplier(getField(hook.getObfuscatedOwner(), hook.getObfuscatedField()), hook.getMultiplier());
+            cachedFieldMultipliers.put(keyName, result);
+        }
+        return result;
+    }
+
+    public static Field getCachedField(String className, String fieldName) {
+        String keyName = Hooks.toClassFieldKey(className, fieldName);
+        Field result = cachedFields.get(keyName);
+        if (result == null) {
+            Hook hook = Hooks.getHook(keyName);
+            result = getField(hook.getObfuscatedOwner(), hook.getObfuscatedField());
+            cachedFields.put(keyName, result);
+        }
+        return result;
+    }
+
 
     public static int getInt(String className, String fieldName, Object ref) {
-        Hook hook = getHook(className, fieldName);
-        Object object = getValue(hook, ref);
-        if (object != null)
-            return ((int) object) * (int) hook.getMultiplier();
-        return -1;
+        FieldMultiplier fm = getFieldMultiplier(className, fieldName);
+
+        try {
+            return (int)fm.getField().get(ref) * (int)fm.getMultiplier();
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static byte getByte(String className, String fieldName, Object ref) {
-        Hook hook = getHook(className, fieldName);
-        Object object = getValue(hook, ref);
-        if (object != null)
-            return ((byte) object);
-        return -1;
+        Field field = getCachedField(className, fieldName);
+
+        try {
+            return (byte)field.get(ref);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static String getString(String className, String fieldName, Object ref) {
-        Hook hook = getHook(className, fieldName);
-        Object object = getValue(hook, ref);
-        return (object != null) ? (String) object : "";
+        Field field = getCachedField(className, fieldName);
+
+        try {
+            Object val = field.get(ref);
+            return val != null ? (String) val : "";
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static boolean getBoolean(String className, String fieldName, Object ref) {
-        Hook hook = getHook(className, fieldName);
-        Object object = getValue(hook, ref);
-        return (object != null) && (boolean) object;
+        Field field = getCachedField(className, fieldName);
+
+        try {
+            Object val = field.get(ref);
+            return (boolean) val;
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static long getLong(String className, String fieldName, Object ref) {
-        Hook hook = getHook(className, fieldName);
-        Object object = getValue(hook, ref);
-        if (object != null) {
-            return ((long) object) * hook.getMultiplier();
+        FieldMultiplier fm = getFieldMultiplier(className, fieldName);
+
+        try {
+            return (long)fm.getField().get(ref) * fm.getMultiplier();
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
         }
-        return -1;
     }
 
     public static Object getRef(String className, String fieldName, Object ref) {
-        Hook hook = getHook(className, fieldName);
-        return getValue(hook, ref);
+        Field field = getCachedField(className, fieldName);
+
+        try {
+            return field.get(ref);
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static Object[] getRefArray(String className, String fieldName, Object ref) {
-        Hook hook = getHook(className, fieldName);
-        Object[] result = {};
-        Object object = getValue(hook, ref);
-        if (object != null)
-            result = (Object[]) object;
+        Field field = getCachedField(className, fieldName);
 
-        return result;
+        try {
+            Object value = field.get(ref);
+            if (value == null)
+                return new Object[]{};
+
+            return (Object[])value;
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public static int[] getIntArray(String className, String fieldName, Object ref) {
-        Hook hook = getHook(className, fieldName);
-        int[] result = {};
-        Object object = getValue(hook, ref);
-        if (object != null)
-            result = (int[]) object;
+        Field field = getCachedField(className, fieldName);
 
-        return result;
+        try {
+            Object value = field.get(ref);
+            if (value == null)
+                return new int[]{};
+
+            return (int[])value;
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

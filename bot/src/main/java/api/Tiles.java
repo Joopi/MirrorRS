@@ -21,7 +21,7 @@ public class Tiles {
         ExtPolygon polygon = polygon(localTile);
         if (polygon.valid()) {
 
-            Point point = polygon.gaussianMagnet(Mouse.getPosition(), 0.3);
+            Point point = polygon.gravityMagnet(Mouse.getPosition(), 0.3);
             if (point.x != -1) {
                 Mouse.move(point);
                 return true;
@@ -33,7 +33,7 @@ public class Tiles {
     public static boolean walkTo(LocalTile localTile, boolean leftClick) {
         if (hoverTile(localTile)) {
             Sleep.range(20, 90, 35, 8);
-            if (leftClick && Menu.getUptext().contains("Walk here")) {
+            if (leftClick && Menu.isUptext("Walk here")) {
                 Mouse.click(MouseEvent.BUTTON1);
                 return true;
             } else {

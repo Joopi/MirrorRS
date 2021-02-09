@@ -6,7 +6,6 @@ import types.shapes.ConvexHull;
 import types.tile.GlobalTile;
 import types.tile.LocalTile;
 import types.tile.SceneTile;
-import utils.Reflection;
 
 import java.util.List;
 import java.util.stream.Stream;
@@ -33,7 +32,7 @@ public abstract class RSActor extends RSInternal {
                 RSNode next = head.next();
 
                 //object next to head will be replaced by an instance of RSCombatInfo when the health bar appears.
-                if (next != null && Reflection.instanceOf(next.ref, RSCombatInfo.CLASS_NAME)) {
+                if (next != null && instanceOf(next.ref, RSCombatInfo.CLASS_NAME)) {
 
                     RSCombatInfo combatInfo = new RSCombatInfo(next.ref);
                     combatInfoCache = combatInfo.updates();
@@ -42,7 +41,7 @@ public abstract class RSActor extends RSInternal {
                     if (head != null) {
 
                         next = head.next();
-                        if (next != null && Reflection.instanceOf(next.ref, RSHealthbarInfo.CLASS_NAME)) {
+                        if (next != null && instanceOf(next.ref, RSHealthbarInfo.CLASS_NAME)) {
 
                             return new RSHealthbarInfo(next.ref);
                         }
@@ -99,7 +98,7 @@ public abstract class RSActor extends RSInternal {
         if (name.isEmpty())
             return false;
 
-        return Interact.with(convexHull(), Client.mainscreen().getBounds(), () -> Menu.getUptext().contains(name), leftClick);
+        return Interact.shape(convexHull(), Client.mainscreen().getBounds(), () -> Menu.isUptext(name), leftClick);
     }
 
     public int rotation() {

@@ -5,7 +5,6 @@ import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.Optional;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
@@ -37,7 +36,6 @@ public class ScriptHandler {
                 JarEntry jarEntry = inputStream.getNextJarEntry();
 
                 while (jarEntry != null) {
-                    System.out.println(jarEntry.getName());
                     if (jarEntry.getName().endsWith(".class")) {
 
                         String className = jarEntry.getName().replaceAll("/", "\\.");
@@ -46,16 +44,15 @@ public class ScriptHandler {
 
                         if (className.endsWith("Main")) {
                             scriptMain = clazz;
-                            System.out.println(Arrays.toString(clazz.getDeclaredMethods()));
-                            System.out.println(Arrays.toString(clazz.getMethods()));
                         }
 
                     }
                     jarEntry = inputStream.getNextJarEntry();
                 }
 
-                if (scriptMain != null)
+                if (scriptMain != null) {
                     instance = scriptMain.getConstructor().newInstance();
+                }
 
                 inputStream.close();
                 loader.close();

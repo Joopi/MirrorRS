@@ -1,7 +1,6 @@
 package internals;
 
-import static utils.Reflection.getInt;
-import static utils.Reflection.getRef;
+import static utils.Reflection.*;
 
 public class RSNodeHashTable extends RSInternal {
 
@@ -34,7 +33,7 @@ public class RSNodeHashTable extends RSInternal {
     }
 
     public RSNode bucket(int idx) {
-        Object[] objects = (Object[]) getRef(className, "buckets", ref);
+        Object[] objects = getRefArray(className, "buckets", ref);
         if (idx < 0 || idx >= objects.length || objects[idx] == null)
             return null;
 
@@ -55,7 +54,7 @@ public class RSNodeHashTable extends RSInternal {
 
     public RSNode get(long key) {
         RSNode head = bucket((int) (key & ((long) (size() - 1))));
-        RSNode currentNode = head.previous();
+        RSNode currentNode = head.next();
         long headKey = head.key();
         long currentKey = currentNode.key();
 
@@ -63,7 +62,7 @@ public class RSNodeHashTable extends RSInternal {
             if (currentKey == key) {
                 return currentNode;
             }
-            currentNode = currentNode.previous();
+            currentNode = currentNode.next();
             currentKey = currentNode.key();
         }
 
@@ -71,21 +70,9 @@ public class RSNodeHashTable extends RSInternal {
     }
 
     public boolean contains(long key) {
-        RSNode head = bucket((int) (key & ((long) (size() - 1))));
-        RSNode currentNode = head.previous();
-        long headKey = head.key();
-        long currentKey = currentNode.key();
-
-        while (currentKey != headKey) {
-            if (currentKey == key) {
-                return true;
-            }
-            currentNode = currentNode.previous();
-            currentKey = currentNode.key();
-        }
-
-        return false;
+        return get(key) != null;
     }
+
 
     public void debug() {
         RSNode[] buckets = buckets();

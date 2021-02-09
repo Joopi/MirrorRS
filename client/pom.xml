@@ -27,10 +27,12 @@
     </properties>
 
     <build>
+
         <plugins>
             <plugin>
                 <artifactId>maven-assembly-plugin</artifactId>
                 <configuration>
+
                     <archive>
                         <manifest>
                             <mainClass>Main</mainClass>
@@ -40,7 +42,9 @@
                         <descriptorRef>jar-with-dependencies</descriptorRef>
                     </descriptorRefs>
 
-                    <finalName>Launcher</finalName>
+                    <appendAssemblyId>false</appendAssemblyId>
+                    <outputDirectory>${dir}</outputDirectory>
+                    <finalName>Loader</finalName>
                 </configuration>
             </plugin>
         </plugins>
