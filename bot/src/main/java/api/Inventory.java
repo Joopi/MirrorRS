@@ -16,7 +16,7 @@ public class Inventory {
     private static final int ITEM_X_PADDING = 10;
     private static final int ITEM_Y_PADDING = 4;
 
-    public static int inventoryCount() {
+    public static int itemsCount() {
         return itemContainer().IDs().length;
     }
 
